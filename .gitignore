@@ -1,0 +1,10 @@
+# Python
+venv/
+
+# Resources
+fonts/Georgia.ttf
+fonts/Helvetica.ttc
+
+# Other
+.DS_Store
+.idea/
