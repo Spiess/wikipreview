@@ -4,6 +4,7 @@ import json
 import re
 from io import BytesIO
 
+import qrcode
 import requests
 from PIL import Image, ImageDraw, ImageFont
 
@@ -51,9 +52,9 @@ def generate_random_summary(user_agent_email, title_font_path, body_font_path, l
 
 
 def generate_daily_summary(user_agent_email, title_font_path, body_font_path, language_code='en', date=None):
-    title, description, extract, thumbnail_url = load_tfa(user_agent_email, language_code, date)
+    title, description, extract, thumbnail_url, article_url = load_tfa(user_agent_email, language_code, date)
     thumbnail = load_image(thumbnail_url)
-    summary = create_summary_image(title, description, extract, thumbnail, title_font_path, body_font_path)
+    summary = create_summary_image(title, description, extract, thumbnail, title_font_path, body_font_path, article_url)
 
     return summary
 
@@ -78,11 +79,12 @@ def load_tfa(user_agent_email, language_code, date):
     description = response['tfa']['description']
     extract = response['tfa']['extract']
     thumbnail_url = response['tfa']['thumbnail']['source']
+    article_url = response['tfa']['content_urls']['desktop']['page']
 
     html_tag_regex = re.compile('<.*?>')
     title = re.sub(html_tag_regex, '', title)
 
-    return title, description, extract, thumbnail_url
+    return title, description, extract, thumbnail_url, article_url
 
 
 def load_random(user_agent_email, language_code):
@@ -116,7 +118,19 @@ def load_image(url):
     return Image.open(b)
 
 
-def create_summary_image(title, description, extract, thumbnail, title_font_path, body_font_path):
+def create_summary_image(title, description, extract, thumbnail, title_font_path, body_font_path, article_url=None):
+    """
+    Creates a summary image for the given data of a Wikipedia article.
+
+    :param title: Title of the article
+    :param description: Short description of the article
+    :param extract: Extract of the article
+    :param thumbnail: Thumbnail image of the article
+    :param title_font_path: Path to the title font file
+    :param body_font_path: Path to the body font file
+    :param article_url: URL to the article (if provided inserts QR code to article)
+    :return: Summary image of the article
+    """
     width = 600
     height = 448
     padding = 10
@@ -133,6 +147,18 @@ def create_summary_image(title, description, extract, thumbnail, title_font_path
 
     thumbnail_start = width - tw - padding
     image.paste(thumbnail, (thumbnail_start, padding))
+
+    # Draw QR code if enabled
+    qr_size = 0
+    if article_url:
+        qr_builder = qrcode.QRCode(
+            border=3,
+            box_size=3
+        )
+        qr_builder.add_data(article_url)
+        qr = qr_builder.make_image()
+        qr_size = qr.pixel_size
+        image.paste(qr, (width - qr_size, height - qr_size))
 
     # Draw title
     draw = ImageDraw.Draw(image)
@@ -184,7 +210,9 @@ def create_summary_image(title, description, extract, thumbnail, title_font_path
             draw.text((padding, current_height), current_line, fill=(0, 0, 0), font=extract_font)
             current_line = part
             current_height += line_size[1] + padding
-            if current_height > (2 * padding) + th:
+            if current_height > height - qr_size:
+                space = width - padding - qr_size
+            elif current_height > (2 * padding) + th:
                 space = width - (2 * padding)
         else:
             current_line = line
