@@ -141,7 +141,7 @@ def create_summary_image(title, description, extract, thumbnail, title_font_path
     title_size = (0, 0)
     for size in range(32, 8, -1):
         title_font = ImageFont.truetype(title_font_path, size)
-        title_size = title_font.getsize(title)
+        title_size = title_font.getbbox(title)[2:]
         if title_size[0] > title_space:
             continue
         draw.text((padding, padding), title, fill=(0, 0, 0), font=title_font)
@@ -154,7 +154,7 @@ def create_summary_image(title, description, extract, thumbnail, title_font_path
     description_size = (0, 0)
     for size in range(24, 8, -1):
         description_font = ImageFont.truetype(body_font_path, size)
-        description_size = description_font.getsize(description)
+        description_size = description_font.getbbox(description)[2:]
         if description_size[0] > title_space:
             continue
         draw.text((padding, line_height + padding), description, fill=(0, 0, 0), font=description_font)
@@ -171,12 +171,12 @@ def create_summary_image(title, description, extract, thumbnail, title_font_path
     space = title_space
     for part in parts[1:]:
         line = current_line + ' ' + part
-        line_size = extract_font.getsize(line)
+        line_size = extract_font.getbbox(line)[2:]
         if line_size[0] > space:
             # If text doesn't fit
             if current_height + (2 * line_size[1]) + padding > height:
                 final_line = ' '.join(current_line.split()[:-1] + ['...']) if \
-                    extract_font.getsize(current_line + ' ...')[0] > space else current_line + ' ...'
+                    extract_font.getbbox(current_line + ' ...')[2] > space else current_line + ' ...'
                 draw.text((padding, current_height), final_line, fill=(0, 0, 0), font=extract_font)
                 current_height = height
                 break
