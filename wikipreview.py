@@ -173,7 +173,7 @@ def create_summary_image(title, description, extract, thumbnail, title_font_path
         draw.text((padding, padding), title, fill=(0, 0, 0), font=title_font)
         break
 
-    line_height = padding + title_size[1] + 2
+    line_height = padding + title_size[1] + 3
     draw.line((padding, line_height, thumbnail_start - padding, line_height), fill=(0, 0, 0))
 
     # Draw description
@@ -187,7 +187,7 @@ def create_summary_image(title, description, extract, thumbnail, title_font_path
         break
 
     # Draw extract
-    extract_start = line_height + (padding * 3) + description_size[1]
+    extract_start = line_height + int(padding * 2.2) + description_size[1]
     extract_font = ImageFont.truetype(body_font_path, extract_font_size)
 
     parts = extract.split(' ')
@@ -210,7 +210,7 @@ def create_summary_image(title, description, extract, thumbnail, title_font_path
             draw.text((padding, current_height), current_line, fill=(0, 0, 0), font=extract_font)
             current_line = part
             current_height += line_size[1] + padding
-            if current_height > height - qr_size:
+            if current_height + line_size[1] > height - qr_size:
                 space = width - padding - qr_size
             elif current_height > (2 * padding) + th:
                 space = width - (2 * padding)
