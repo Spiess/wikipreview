@@ -38,10 +38,13 @@ def main():
     saturation = 0.5
 
     while True:
+        logging.info('Cleaning...')
         clean(inky)
         try:
+            logging.info('Retrieving today\'s featured article...')
             image = generate_daily_summary(user_agent_email, title_font_path, body_font_path, language_code)
 
+            logging.info('Drawing image...')
             inky.set_image(image, saturation=saturation)
             inky.show()
         except AttributeError as e:
@@ -53,6 +56,7 @@ def main():
 
         delta = tomorrow - now
 
+        logging.info('Sleeping until tomorrow. Have a great day!')
         if delta > datetime.timedelta(0):
             time.sleep(delta.total_seconds())
 
