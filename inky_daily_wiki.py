@@ -26,6 +26,8 @@ def main():
                                              'Georgia.', default='fonts/Georgia.ttf')
     parser.add_argument('--body-font', help='Path to the font used to render the article body. Wikipedia uses '
                                             'Helvetica.', default='fonts/Helvetica.ttc')
+    parser.add_argument('-l', '--log-level', help='Log level for logging messages.', type=str, default='INFO',
+                        choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG'])
 
     args = parser.parse_args()
     user_agent_email = args.user_agent_email
@@ -33,6 +35,10 @@ def main():
 
     title_font_path = args.title_font
     body_font_path = args.body_font
+
+    loglevel = getattr(logging, args.log_level)
+    logging.basicConfig(level=loglevel, format='%(asctime)s - %(levelname)s - %(message)s')
+    logging.info(f'Set log level to: {logging.getLevelName(loglevel)}')
 
     inky = Inky()
     saturation = 0.5
