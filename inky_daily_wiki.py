@@ -57,7 +57,7 @@ def main():
             logging.error(f'Encountered attribute error: {e}')
 
         tomorrow = datetime.datetime.today() + datetime.timedelta(days=1)
-        tomorrow.replace(hour=3, minute=0, second=0, microsecond=0)
+        tomorrow = tomorrow.replace(hour=3, minute=0, second=0, microsecond=0)
         now = datetime.datetime.now()
 
         delta = tomorrow - now
