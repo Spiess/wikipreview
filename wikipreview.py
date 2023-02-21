@@ -1,5 +1,6 @@
 import argparse
 import datetime
+import html
 import json
 import re
 from io import BytesIO
@@ -43,6 +44,12 @@ def main():
         summary.show()
 
 
+def unescape_html(text):
+    html_tag_regex = re.compile('<.*?>')
+    text = re.sub(html_tag_regex, '', text)
+    return html.unescape(text)
+
+
 def generate_random_summary(user_agent_email, title_font_path, body_font_path, language_code='en'):
     title, description, extract, thumbnail_url = load_random(user_agent_email, language_code)
     thumbnail = load_image(thumbnail_url)
@@ -81,8 +88,7 @@ def load_tfa(user_agent_email, language_code, date):
     thumbnail_url = response['tfa']['thumbnail']['source']
     article_url = response['tfa']['content_urls']['desktop']['page']
 
-    html_tag_regex = re.compile('<.*?>')
-    title = re.sub(html_tag_regex, '', title)
+    title = unescape_html(title)
 
     return title, description, extract, thumbnail_url, article_url
 
@@ -102,8 +108,7 @@ def load_random(user_agent_email, language_code):
     extract = response['extract']
     thumbnail_url = response['thumbnail']['source']
 
-    html_tag_regex = re.compile('<.*?>')
-    title = re.sub(html_tag_regex, '', title)
+    title = unescape_html(title)
 
     return title, description, extract, thumbnail_url
 
