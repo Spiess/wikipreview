@@ -60,7 +60,7 @@ def generate_random_summary(user_agent_email, title_font_path, body_font_path, l
 
 def generate_daily_summary(user_agent_email, title_font_path, body_font_path, language_code='en', date=None):
     title, description, extract, thumbnail_url, article_url = load_tfa(user_agent_email, language_code, date)
-    thumbnail = load_image(thumbnail_url)
+    thumbnail = load_image(thumbnail_url) if thumbnail_url else None
     summary = create_summary_image(title, description, extract, thumbnail, title_font_path, body_font_path, article_url)
 
     return summary
@@ -85,7 +85,7 @@ def load_tfa(user_agent_email, language_code, date):
     title = response['tfa']['titles']['display']
     description = response['tfa']['description']
     extract = response['tfa']['extract']
-    thumbnail_url = response['tfa']['thumbnail']['source']
+    thumbnail_url = response['tfa']['thumbnail']['source'] if 'thumbnail' in response['tfa'] else None
     article_url = response['tfa']['content_urls']['desktop']['page']
 
     title = unescape_html(title)
@@ -143,15 +143,19 @@ def create_summary_image(title, description, extract, thumbnail, title_font_path
 
     image = Image.new(mode='RGB', size=(width, height), color=(255, 255, 255))
 
-    # Rescale and draw thumbnail
-    max_dim = 300
-    tw, th = thumbnail.size
-    factor = max_dim / max(tw, th)
-    thumbnail = thumbnail.resize((int(tw * factor), int(th * factor)))
-    tw, th = thumbnail.size
+    if thumbnail:
+        # Rescale and draw thumbnail
+        max_dim = 300
+        tw, th = thumbnail.size
+        factor = max_dim / max(tw, th)
+        thumbnail = thumbnail.resize((int(tw * factor), int(th * factor)))
+        tw, th = thumbnail.size
 
-    thumbnail_start = width - tw - padding
-    image.paste(thumbnail, (thumbnail_start, padding))
+        thumbnail_start = width - tw - padding
+        image.paste(thumbnail, (thumbnail_start, padding))
+    else:
+        tw, th = 0, 0
+        thumbnail_start = width
 
     # Draw QR code if enabled
     qr_size = 0
