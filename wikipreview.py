@@ -199,7 +199,8 @@ def create_summary_image(title, description, extract, thumbnail, title_font_path
     extract_start = line_height + int(padding * 2.2) + description_size[1]
     extract_font = ImageFont.truetype(body_font_path, extract_font_size)
 
-    parts = extract.split(' ')
+    # Remove leading and trailing white spaces from extract before splitting
+    parts = extract.strip().split(' ')
 
     current_line = parts[0]
     current_height = extract_start
