@@ -4,13 +4,14 @@ import html
 import json
 import re
 from io import BytesIO
+from typing import Tuple
 
 import qrcode
 import requests
 from PIL import Image, ImageDraw, ImageFont
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser()
 
     parser.add_argument('article', help='Type of article to load. Either "tfa" today\'s featured article, or "random".',
@@ -44,13 +45,14 @@ def main():
         summary.show()
 
 
-def unescape_html(text):
+def unescape_html(text: str) -> str:
     html_tag_regex = re.compile('<.*?>')
     text = re.sub(html_tag_regex, '', text)
     return html.unescape(text)
 
 
-def generate_random_summary(user_agent_email, title_font_path, body_font_path, language_code='en'):
+def generate_random_summary(user_agent_email: str, title_font_path: str, body_font_path: str,
+                            language_code: str = 'en') -> Image:
     title, description, extract, thumbnail_url = load_random(user_agent_email, language_code)
     thumbnail = load_image(thumbnail_url)
     summary = create_summary_image(title, description, extract, thumbnail, title_font_path, body_font_path)
@@ -58,7 +60,8 @@ def generate_random_summary(user_agent_email, title_font_path, body_font_path, l
     return summary
 
 
-def generate_daily_summary(user_agent_email, title_font_path, body_font_path, language_code='en', date=None):
+def generate_daily_summary(user_agent_email: str, title_font_path: str, body_font_path: str, language_code: str = 'en',
+                           date: str = None) -> Image:
     title, description, extract, thumbnail_url, article_url = load_tfa(user_agent_email, language_code, date)
     thumbnail = load_image(thumbnail_url) if thumbnail_url else None
     summary = create_summary_image(title, description, extract, thumbnail, title_font_path, body_font_path, article_url)
@@ -66,7 +69,7 @@ def generate_daily_summary(user_agent_email, title_font_path, body_font_path, la
     return summary
 
 
-def load_tfa(user_agent_email, language_code, date):
+def load_tfa(user_agent_email: str, language_code: str, date: str) -> Tuple[str, str, str, str, str]:
     today = datetime.datetime.now()
     if date is None:
         date = today.strftime('%Y/%m/%d')
@@ -93,7 +96,7 @@ def load_tfa(user_agent_email, language_code, date):
     return title, description, extract, thumbnail_url, article_url
 
 
-def load_random(user_agent_email, language_code):
+def load_random(user_agent_email: str, language_code: str) -> Tuple[str, str, str, str]:
     # Using legacy Wikipedia API because I was unable to find Wikimedia random article endpoint
     url = f'https://{language_code}.wikipedia.org/api/rest_v1/page/random/summary'
     headers = {
@@ -113,7 +116,7 @@ def load_random(user_agent_email, language_code):
     return title, description, extract, thumbnail_url
 
 
-def load_image(url):
+def load_image(url: str) -> Image:
     headers = {
         # 'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
         'User-Agent': 'WikiSummary (florian.spiess@unibas.ch)'
@@ -123,7 +126,8 @@ def load_image(url):
     return Image.open(b)
 
 
-def create_summary_image(title, description, extract, thumbnail, title_font_path, body_font_path, article_url=None):
+def create_summary_image(title: str, description: str, extract: str, thumbnail: Image, title_font_path: str,
+                         body_font_path: str, article_url: str = None) -> Image:
     """
     Creates a summary image for the given data of a Wikipedia article.
 
