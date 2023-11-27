@@ -86,7 +86,11 @@ def load_tfa(user_agent_email: str, language_code: str, date: str) -> Tuple[str,
     response = json.loads(response.text)
 
     title = response['tfa']['titles']['display']
-    description = response['tfa']['description']
+    # Check if description is available
+    if 'description' in response['tfa']:
+        description = response['tfa']['description']
+    else:
+        description = 'From Wikipedia, the free encyclopedia'
     extract = response['tfa']['extract']
     thumbnail_url = response['tfa']['thumbnail']['source'] if 'thumbnail' in response['tfa'] else None
     article_url = response['tfa']['content_urls']['desktop']['page']
