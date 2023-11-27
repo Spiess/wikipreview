@@ -28,6 +28,7 @@ def main():
                                             'Helvetica.', default='fonts/Helvetica.ttc')
     parser.add_argument('-l', '--log-level', help='Log level for logging messages.', type=str, default='INFO',
                         choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG'])
+    parser.add_argument('--single-run', help='Run once and exit.', action='store_true')
 
     args = parser.parse_args()
     user_agent_email = args.user_agent_email
@@ -55,6 +56,10 @@ def main():
             inky.show()
         except AttributeError as e:
             logging.error(f'Encountered attribute error: {e}')
+
+        if args.single_run:
+            logging.info('Exiting. Have a great day!')
+            break
 
         tomorrow = datetime.datetime.today() + datetime.timedelta(days=1)
         tomorrow = tomorrow.replace(hour=3, minute=0, second=0, microsecond=0)
