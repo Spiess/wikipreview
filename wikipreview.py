@@ -160,7 +160,14 @@ def create_summary_image(title: str, description: str, extract: str, thumbnail: 
         tw, th = thumbnail.size
 
         thumbnail_start = width - tw - padding
-        image.paste(thumbnail, (thumbnail_start, padding))
+
+        # Check if thumbnail has an alpha channel (transparency)
+        if thumbnail.mode in ['RGBA', 'LA']:
+            mask = thumbnail  # use thumbnail as mask
+        else:
+            mask = Image.new('L', thumbnail.size, 255)  # create a new white 'L' image as mask
+
+        image.paste(thumbnail, (thumbnail_start, padding), mask=mask)
     else:
         tw, th = 0, 0
         thumbnail_start = width
