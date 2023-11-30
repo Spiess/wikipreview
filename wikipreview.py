@@ -130,6 +130,15 @@ def load_image(url: str) -> Image:
     return Image.open(b)
 
 
+def rescale_image(image: Image, max_dim: int) -> Image:
+    """
+    Rescales the given image to fit into a square with the given max dimension.
+    """
+    w, h = image.size
+    factor = max_dim / max(w, h)
+    return image.resize((int(w * factor), int(h * factor)))
+
+
 def create_summary_image(title: str, description: str, extract: str, thumbnail: Image, title_font_path: str,
                          body_font_path: str, article_url: str = None) -> Image:
     """
@@ -151,13 +160,29 @@ def create_summary_image(title: str, description: str, extract: str, thumbnail: 
 
     image = Image.new(mode='RGB', size=(width, height), color=(255, 255, 255))
 
+    # Draw QR code if enabled
+    qr_size = 0
+    if article_url:
+        qr_builder = qrcode.QRCode(
+            border=3,
+            box_size=3
+        )
+        qr_builder.add_data(article_url)
+        qr = qr_builder.make_image()
+        qr_size = qr.pixel_size
+        image.paste(qr, (width - qr_size, height - qr_size))
+
+    # Draw thumbnail after QR code to allow resizing if qr code is particularly large
     if thumbnail:
         # Rescale and draw thumbnail
         max_dim = 300
+        thumbnail = rescale_image(thumbnail, max_dim)
         tw, th = thumbnail.size
-        factor = max_dim / max(tw, th)
-        thumbnail = thumbnail.resize((int(tw * factor), int(th * factor)))
-        tw, th = thumbnail.size
+
+        # If thumbnail height would overlap with QR code, resize thumbnail further
+        if height - qr_size - padding < th:
+            thumbnail = rescale_image(thumbnail, height - qr_size - padding)
+            tw, th = thumbnail.size
 
         thumbnail_start = width - tw - padding
 
@@ -171,18 +196,6 @@ def create_summary_image(title: str, description: str, extract: str, thumbnail: 
     else:
         tw, th = 0, 0
         thumbnail_start = width
-
-    # Draw QR code if enabled
-    qr_size = 0
-    if article_url:
-        qr_builder = qrcode.QRCode(
-            border=3,
-            box_size=3
-        )
-        qr_builder.add_data(article_url)
-        qr = qr_builder.make_image()
-        qr_size = qr.pixel_size
-        image.paste(qr, (width - qr_size, height - qr_size))
 
     # Draw title
     draw = ImageDraw.Draw(image)
@@ -235,10 +248,10 @@ def create_summary_image(title: str, description: str, extract: str, thumbnail: 
             draw.text((padding, current_height), current_line, fill=(0, 0, 0), font=extract_font)
             current_line = part
             current_height += line_size[1] + padding
-            if current_height + line_size[1] > height - qr_size:
-                space = width - padding - qr_size
-            elif current_height > (2 * padding) + th:
+            if current_height > (2 * padding) + th:
                 space = width - (2 * padding)
+            if current_height + line_size[1] > height - qr_size:
+                space = min(width - padding - qr_size, space)
         else:
             current_line = line
 
